@@ -1,0 +1,35 @@
+1. Are there any parts of the original WordCount that still confuse you? If so, what?
+ANSWER: - I was able to understand the concept of mapper and reducer functions with word count problem.I do not see any confusions on this problem.
+
+2. How did the output change when you submitted with -D mapreduce.job.reduces=3? Why would this be necessary if your job produced large output sets?
+
+ANSWER: - Three different output files got created when the reducer was set to 3.None of the output files created had the same words replicated. This method would be necessary when we deal with large datasets to ensure parallel processing of mapper outputs resulting in reduced complexity and low latency. Additionally, partitioned outputs can help to differentiate the analysis/extra process required for each output set rather than a single large set.
+
+3. How was the -D mapreduce.job.reduces=0 output different?
+
+ANSWER: - The output produced the result of mapper as the reducer routine did not executed at all.The result were <key,value> pairs with its count value always set to 1. 
+
+4. Was There Any Noticeable Difference In The Running Time Of Your Redditaverage With And Without The Combiner Optimization?
+ 
+ANSWER: - The combiner optimization was tested on Reddit-1 and Reddit-2 datasets respectively. Running time was less with combiner optimization compared to that of running with out combiner. In the case of Reddit-2 following differences were noticed:
+With Combiner:
+--------------
+Total time spent by all maps in occupied slots (ms)=46151
+Total time spent by all reduces in occupied slots (ms)=3195
+CPU time spent (ms)=44380
+Combine input records=582307
+Combine output records=80
+Reduce shuffle bytes=1901
+Reduce input records=80
+
+
+Without Combiner:
+-----------------
+Total time spent by all maps in occupied slots (ms)=50755
+Total time spent by all reduces in occupied slots (ms)=3775
+CPU time spent (ms)=45070
+Combine input records=0
+Combine output records=0
+Reduce shuffle bytes=1599124
+Reduce input records=582307
+
