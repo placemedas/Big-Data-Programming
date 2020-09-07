@@ -1,0 +1,45 @@
+1. In the WikipediaPopular class, it would be much more interesting to find the page that is most popular, not just the view count (as we did with Spark). What would be necessary to modify your class to do this? (You don't have to actually implement it.) 
+
+Answer: - 
+Following changes are anticipated to produce page title along with view count:
+
+* Mapper class definition needs to be modified to have (Long,String) pair writable value in the output <key,value> to produce view count as well as the page title. Changes are also required for setMapOutputValueClass to produce (Long,String) pair writable output.
+* Combiner class definition needs change to accept input as well as to produce output in Long,String pair writable format
+* Reducer class definition should also be altered to accept input in Long,String pair writable and produce output in the same format.
+* No changes are required in the reducer or combiner calculation which shall still be based on view count
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+2. An RDD has many methods: it can do many more useful tricks than were at hand with MapReduce. Write a sentence or two to explain the difference between .map and .flatMap. Which is more like the MapReduce concept of mapping? 
+
+Answer: - A .map returns a single list for each single input operation passed. However a .flatMap flattens and combines all the outputs into a list/tuple which is more meaningfull. I have tried with following example 
+
+The below example shows that output of each map is a separate list
+>>> sc.parallelize("tom is big data").map(lambda x: x.split()).collect()
+[['t'], ['o'], ['m'], [], ['i'], ['s'], [], ['b'], ['i'], ['g'], [], ['d'], ['a'], ['t'], ['a']]
+
+But flaptMap creates only a single list out of the same input data
+>>> sc.parallelize("tom is big data").flatMap(lambda x: x.split()).collect()
+['t', 'o', 'm', 'i', 's', 'b', 'i', 'g', 'd', 'a', 't', 'a']
+ 
+Although map and flatMap can be used for mapper in mapreduce, .flatMap takes the priority as it can be applied to cases like wordcount where you need to yield an additional field like count. 
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+3. Do the same for .reduce and .reduceByKey. Which is more like the MapReduce concept of reducing? 
+
+Answer: - .reduce applies the reduction on the entire values in an RDD based on the operation specified irrespective of the presence of a key.However a reduceByKey performs defined reduce operation based on each key present in RDD.  reduceByKey matches to the reduce function in MapReduce.
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+4. When finding popular Wikipedia pages, the maximum number of page views is certainly unique, but the most popular page might be a tie. What would your improved Python implementation do if there were two pages with the same highest number of page views in an hour? What would be necessary to make your code find all of the pages views the maximum number of times? (Again, you don't have to actually implement this.) 
+
+Answer: - To achieve the below , I anticipate the below user defined function to be applied to find maximum rather than using max function(that only returns one value). :
+		#    if x[0] > y[0]:
+		#        return x
+		#    elif x[0] == y[0]:
+		#        return x, y
+		#    else:
+		#        return y
+	Both x[0] and y[0] are referred to viewcount in the viewcount,pagetitle tuple. The elif condition mentioned above shall ensure that if two passed values are at maximum, both the tuples are returned.This function needs to be applied at reduceByKey operation.   			
+
+
