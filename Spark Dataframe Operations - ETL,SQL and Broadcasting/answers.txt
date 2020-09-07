@@ -1,0 +1,39 @@
+1. In the Reddit averages execution plan, which fields were loaded? How was the average computed (and was a combiner-like step done)? 
+Answer:
+Score and Subreddit were the two fields loaded. The average was calculated as below:	
+i. The json file was first read using the schema with score and subreddit fields 
+ii. Average of each subreddit for individual partitions was obtained in the next step. This aggregate function was termed as partial average. This step can be equated to the combiner like operation.
+iii. Shuffling operation was performed and stored into 200 default partitions.
+iv. Final average for each subreddit is then obtained at the final aggregate step. This can be attributed to a reducer like operation.
+-----------------------------------------------------------------------------------------------------------------------------------------------
+2. What was the running time for your Reddit averages implementations in the five scenarios described above? How much difference did Python implementation make (PyPy vs the default CPython)? Why was it large for RDDs but not for DataFrames? 
+Answer:
+Following are the running times for five scenarios:
+	Java(MapReduce) implementation - 1m35.494s
+	CPython(DataFrames) implementation - 0m57.295s
+	CPython(RDD) implementation - 2m32.817s
+	Pypy(DataFrames) implementation - 0m49.753s
+	Pypy(RDD) implementation - 1m35.670s
+
+While comparing Pypy v/s CPython, Pypy was negligibly faster than CPython for dataframes(2-7 seconds). But for RDD's, Pypy implementation ran faster than CPython by 57 seconds. 
+
+RDD mode(row wise storage), Cpython code in the driver has to be piped to the executor and run as a python subprocess to run it in JVM.Pypy infact did speed up the subprocess by actually optimizing the code into machine code using a just-in-time compilaton. But dataframes on the other hand has Catalyst optimizer and tungsten that holds schema information(column wise storage) help Python code to run directly in JVM rather than Python API calls. Hence we would not see much difference when a Pypy code is run on a dataframe compared to that of CPython as neither Pypy nor Python code needs to be send to individual executor 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+3. How much of a difference did the broadcast hint make to the Wikipedia popular code's running time (and on what data set)?  
+Answer:
+The wikipedia popular code was tested on pagecounts-3. It could be noted that broadcast hint ran 20-30 seconds faster than without.
+With Broadcast hint: - 1m31.662s
+Without Broadcast - 1m53.184s
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+4. How did the Wikipedia popular execution plan differ with and without the broadcast hint? 
+Answer: The major difference was that the without broadcast hint used 'exchange hashpartitioning' of pagecount followed by a 'sort' of pagecount and 'sortmergejoin' on pagecount and hour & hour(max)
+(3 steps) whereas the explicit broadcast hint option had single step called as 'BroadcastHashJoin' which performed the direct join of  pagecount,hour and hour(max) using buildright phrase.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+5. For the weather data question, did you prefer writing the “DataFrames + Python methods” style, or the “temp tables + SQL syntax” style form solving the problem? Which do you think produces more readable code? 
+Asnwer: I prefer using Dataframes + Python methods as it reduces the complexity of coding to a greater extend. While the SQL syntax does helps the traditional SQL users, the queries can get complex when you create subqueries that include multiple tables. Hence Dataframes + Python methods produces a more readable code.
+
+ 
+

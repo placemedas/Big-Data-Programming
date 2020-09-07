@@ -1,0 +1,44 @@
+1.What did you see in the execution plan for the “join in Spark” solution? Why was the execution so fast (and the memory usage so small)? 
+Answer:
+I could see that pushed filters were applied to tables - orders and lineitem.These filter condition had the list of orderkeys that we passed as input. So the data transferred from Cassandra to dataframe only had those records satisfying the above condition rather than sending the entire table. Since filter was handled at souce level, the execution became fast with less memory space as we had less records to process.     
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+2. What was the CREATE TABLE statement you used for the orders_parts table? 
+Answer:
+CREATE TABLE orders_parts( orderkey int, custkey int, orderstatus text, totalprice decimal, orderdate date, order_priority text, clerk text, ship_priority int, comment text, part_names set<text>,PRIMARY KEY (orderkey));
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+3. What were the running times of the two tpch_orders_* programs on the tpch2 data on the cluster? These orderkeys have results in that data set: 2579142 2816486 586119 441985 2863331. 
+Answer:
+Following were the running times:
+tpch_order_df.py:
+------------------------
+real	0m50.992s
+user	0m34.912s
+sys	0m2.856s
+
+tpch_order_denormalize.py
+--------------------------
+real	0m33.069s
+user	0m23.120s
+sys	0m2.028s
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+4. Consider the logic that you would have to implement to maintain the denormalized data (assuming that the orders table had the part_names column in the main data set). Write a few sentences on what you'd have to do when inserting/updating/deleting data in this case. 
+Answer:
+Maintaining the denormalize data can have following options:
+Option 1: - Use Savemodes.Overwrite while performing write operation - This mode would actually truncate the whole data from table(order_parts) and then inserts the entire data we obtained based on join condition provided. The only disadvantage of this option involes a considerable amount of risk and it is also expensive.
+
+Option 2: - This option is a two fold process
+a. Use Savemodes.Append while performing write operation. This will ensure that the inserts and updates are taken care on existing rows.
+b. Since we are not truncating the table, we could have records that are potentially not required based on the arrival of new data. In such a case, we would need to perform inner join of denormalized table (loaded as dataframe) with selected set of dataframe from tpch keyspace and then retrieve the rows from denormalized that does not exists in the join. Basis the list obtained , perform a delete onto those records alone from denormalised table to ensure data is consistent with tpch4 keyspace results.
+
+
+  
+
+
+
+
+
+
+

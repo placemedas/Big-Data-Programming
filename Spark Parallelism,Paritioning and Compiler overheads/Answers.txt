@@ -1,0 +1,46 @@
+1.What was wrong with the original wordcount-5 data set that made repartitioning worth it? Why did the program run faster after? 
+
+Answer:
+The input dataset wordcount-5 did not had evenly distributed data. Major portion of the size was present in the first and sixth zip files whch was directly partitioned to the individual nodes based on default paritions assigned via executors. Hence while processing the data, first(244MB) and sixth node(116MB) had to take huge time to complete the task while the rest of the nodes finished the work and remain idle. Post repartitioning, the data was evenly spread across all the nodes with equal chunks of input size assigned to each node to perform reduce operation
+
+-----------------------------------------------------------------------------------------------------------------------------
+2. The same fix does not make this code run faster on the wordcount-3 data set. (It may be slightly slower?) Why? 
+
+Amswer:
+The same fix did not make the code run faster as the data is evenly distributed across all nodes.It seemed to be on lower side as reparitioning the same input causes it to be reshuffled resulting in an additional overhead.
+
+-----------------------------------------------------------------------------------------------------------------------------
+3. How could you modify the wordcount-5 input so that the word count code can process it and get the same results as fast as possible? (It's possible to get about another minute off the running time.) 
+
+Answer:
+I can think of 2 solutions:
+
+a. Evenly distirbuting the input file at the source(each chunk should have same size) and then assigning it to RDD can avoid the necessity of add reparitioning in the code 
+b. Apart from repartitioning immediately after accepting input data,we can also directly provide the number of partitions at sc.TextFile if the files are unizpped. This will ensure the data is equally distributed and can avoid an additional reshuffle reducing the execution time .  
+
+------------------------------------------------------------------------------------------------------------------------------
+4. When experimenting with the number of partitions while estimating Euler's constant, you likely didn't see much difference for a range of values, and chose the final value in your code somewhere in that range. What range of partitions numbers was “good” (on the desktop/laptop where you were testing)? 
+
+Answer:
+8 - 100 partitions was a good number while estimating Eulers Constant. Different numbers of slices were provided and the comparison results are as below:
+
+For a sample of 1,000,000 run in my personal laptop
+1000 partitions - 38 seconds
+80 partitions - 35 seconds
+32 partitions - 33.4 seconds
+16 partitions - 31 seconds
+8 partitions - 30 seconds
+5 partitions - 35 seconds
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+5. How much overhead does it seem like Spark adds to a job? How much speedup did PyPy get over the usual Python implementation? 
+
+Answer: For a sample of 1000000,Spark implementation with Pypy took 17 seconds whereas standalone python code took only 0.33 seconds. Hence the total overhead took by Spark comes in the range of 15 - 17 seconds.
+
+Pypy vs Usual Python
+Post Pypy implementation, the actual duration to execute a task has reduced in the range of 40-50% when compared with usual Python implementation while running for a sample of 1000000. Results were as below:
+Usual Python Implementation - 30 seconds
+Pypy implementation - 17 seconds
+
+ 

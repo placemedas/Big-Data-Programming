@@ -1,0 +1,32 @@
+1. What happened to the HDFS file when one of the nodes it was stored on failed?
+
+Answer:
+When one of the nodes went down, the information present in that node was replicated to another active node. 
+For example, the block ID information before failure was as below:
+
+Block ID: 1073741825
+Size: 16777216
+Availability:
+hdfs-datanode-2
+hdfs-datanode-3
+
+Post failure of node-3 the same block had information as below:
+Block ID: 1073741825
+Size: 16777216
+Availability:
+hdfs-datanode-1
+hdfs-datanode-2
+
+-----------------------------------------------------------------------------------
+2. How did YARN/MapReduce/Spark behave when one of the compute nodes disappeared?
+
+Answer:
+When one of the nodes disappeared during execution, the Executors connected to that particular node(yarn-nodemanager-3) did stop.
+Post the same, all the executors eventually stopped spark re-ran those tasks with new executors on available nodes.
+
+-----------------------------------------------------------------------------------
+3.Were there more things you'd like to try with this cluster, or anything you did try that you think should have been in this assignment?
+
+Answer:
+It will be good to see how checkpointing the operation would help when a node failure occurs in spark execution. This would help us to 
+understand how fast spark restores the state and produces output in the event of a failure. 

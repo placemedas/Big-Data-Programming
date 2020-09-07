@@ -1,0 +1,33 @@
+1.How much of a difference did the .cache() make in your Reddit ETL code? 
+
+Answer: - .cache() helped in reducing the time of execution by a minimum of 7 seconds and above(greater than 15%) proportional to the size of input dataset. The code was run on reddit-2(locally) and reddit-3(in cluster) and could notice the below:
+
+Reddit-2(Local):
+---------
+without Cache():0m47.459s
+With Cache():0m40.073s
+
+Reddit-3(Cluster):
+---------
+without Cache():0m49.705s
+with cache():0m41.822s
+
+----------------------------------------------------------------------------------------------------------------
+2. When would .cache() make code slower than without?
+
+Answer: - Cache() can make code slower on following scenarios:
+a. When cache() is called after doing multiple operations on same RDD. For example, if we allocate an RDD A,perform some map operations to create RDD B which is cache and then use initially allocated RDD A which shall make the code slower.
+b. When the input data allocated to partitions are skewed/uneven. In such cases, I anticipate that the cache memory can be filled up in such cases resulting in slowness.
+
+-----------------------------------------------------------------------------------------------------------------
+3. Under what conditions will the broadcast join be faster than an actual join? 
+
+Answer:- Broadcast join becomes faster than actual join under the following scenario:
+a. One among two RDD's have a smaller set of data.In such a case, broadcast join can help by sending the smaller set of data via executors to each partition of larger RDD for easy mapping and joining of matching keys.
+
+-----------------------------------------------------------------------------------------------------------------
+4. When will the broadcast join be slower? 
+
+Answer:- The broadcast join can become slower under the following cases:
+a. If we are trying to join two RDD's that are of large size with its data scattered across multiple partitions. In such a case converting one of the RDD into a list and then sending it to multiple executors can take more time.
+b. When the keys of both RDD's are located in same partition. In such a case, a join would only require you to re-locate the data with in the same partition and does not require a shuffle.

@@ -1,0 +1,53 @@
+1. What happened when you inserted another row with the same primary key as an existing row? 
+Answer:
+The second insert operation performed an update to the existing row.This operation in Cassandra is called as upsert. As provided in the example:
+
+INSERT INTO test (id, data) VALUES (2, 'secondary'); - This operation performed an insert into test table with '2' as primary key
+INSERT INTO test (id, data) VALUES (2, 'double'); - This operation performed an update(upsert) for id '2'
+
+-------------------------------------------------------------------------------------------------------
+2. What happened when you query a keyspace with replication factor 1 and one node down? How did it behave with replication factor 2 and a node down? 
+Answer:
+For replication factor of 1, query operation returned an error 'NoHostAvailable' citing the inability to complete the operation against any hosts. When the replication factor 2 was set and when one of the node was down, I was able to perform operations with out error even when one node was down.
+
+--------------------------------------------------------------------------------------------------------
+3. How did the consistency level affect the results with the node up/down? 
+Answer:
+Following are the factors noted:
+Node Up:
+CONSISTENCY ONE - Both nodes are up. Hence (6,hexadecimal) was successfully inserted.Select operation successfully returns the results.
+CONSISTENCY ALL - Both ids 7 and 8 were successfully inserted as the nodes are up.Select operation successfully returned the results.
+
+Node Down:
+CONSISTENCY ONE - Successfully inserted (6,hexadecimal) as the operation is performed locally on that node.Select operation returns the results locally from that node.
+CONSISTENCY ALL - Both ids (7 and 8) could not be inserted as both nodes should be up to complete the operation.Select operation works for some and not for all based on data availability of replica nodes
+
+--------------------------------------------------------------------------------------------------------
+4. Which of the WHERE id=? values returned successfully with CONSISTENCY ALL when one of the nodes was down? Why do you think some could be returned but not others? 
+Answer:
+Only the following ids were returned: (1,initial) and (4,square). This is because both the records are present in 2 of the active nodes present in the cluster. However id's 2,3 and 5 could not be returned because the copy of those records are present in the node which is down.
+
+--------------------------------------------------------------------------------------------------------
+5. What was the CREATE TABLE statement you used for the nasalogs table? What was the primary key you choose, and why? 
+
+Answer:
+Below was the query used to create a table:
+CREATE TABLE nasalogs ( host TEXT, datetime TIMESTAMP, path text, bytes INT, id UUID, PRIMARY KEY(host,id));
+
+The primary key chosen was host + UUID. Following are the reasons:
+* Uniqueness of a record is maintained by UUID.
+* Host being primary ensures that data we want to operate together comes in the same node.
+* The key field host also help in distributing your data evenly around the nodes
+
+--------------------------------------------------------------------------------------------------------
+6. What was the CQL query you used (or tried) to get the total number of bytes? 
+
+Answer:
+SELECT SUM(bytes) FROM nasalogs -> This query resulted in a timeout issue.
+
+The Sum of bytes for each host however did returned results(although its not the complete sum). This was achieved using Group by clause.
+
+
+
+
+
